@@ -1,5 +1,5 @@
 // Data access used by the views. Every write goes to IndexedDB immediately.
-import { get, put, getKV, getKeyRange, getByDateRange } from './db.js';
+import { get, put, getKV, getKeyRange, getByDateRange, getAll, del, setKV } from './db.js';
 import { withDefaults, HABITS } from './lib/model.js';
 
 export async function loadSettings() { return withDefaults(await getKV('settings')); }
@@ -43,4 +43,43 @@ export async function loadWeek(dates) {
     getKeyRange('habits', from, to),
   ]);
   return { strength, climbs, swims, steps, habits };
+}
+
+// ---- Exercises & templates ---------------------------------------------
+
+
+export async function getExercises() {
+  return (await getAll('exercises')).sort((a, b) => a.name.localeCompare(b.name));
+}
+export async function exerciseMap() {
+  return new Map((await getAll('exercises')).map((e) => [e.id, e]));
+}
+export const putExercise = (e) => put('exercises', e);
+
+export async function getTemplates() {
+  return (await getAll('templates')).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+}
+export const getTemplate = (id) => get('templates', id);
+export const putTemplate = (t) => put('templates', t);
+export const deleteTemplate = (id) => del('templates', id);
+
+// ---- Strength sessions --------------------------------------------------
+
+export const getAllStrength = () => getAll('strength');
+export const getSession = (id) => get('strength', id);
+export const deleteSession = (id) => del('strength', id);
+
+// Writes are queued so rapid taps are stored in order, never out of order.
+let queue = Promise.resolve();
+export function saveSession(session) {
+  const copy = structuredClone(session);
+  const p = queue.then(() => put('strength', copy));
+  queue = p.catch((e) => console.error('[save]', e));   // one failure never blocks later saves
+  return p;
+}
+
+export async function getActiveSessionId() { return ((await getKV('meta')) || {}).activeWorkoutId || null; }
+export async function setActiveSessionId(id) {
+  const meta = (await getKV('meta')) || {};
+  await setKV('meta', { ...meta, activeWorkoutId: id });
 }

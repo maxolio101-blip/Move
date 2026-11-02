@@ -6,7 +6,8 @@ import { toISODate, fromISODate, formatDay, weekDates } from '../lib/date.js';
 import { parseStepsClipboard, parseStepNumber } from '../lib/steps.js';
 import { summarizeWeek, stepsProgress } from '../lib/week.js';
 import { HABITS } from '../lib/model.js';
-import { loadSettings, getHabits, setHabit, getSteps, saveSteps, loadWeek } from '../repo.js';
+import { loadSettings, getHabits, setHabit, getSteps, saveSteps, loadWeek, getActiveSessionId } from '../repo.js';
+import { startOrResume } from './workout.js';
 
 const nf = new Intl.NumberFormat('en-GB');
 const R = 54, C = 2 * Math.PI * R;          // ring geometry (viewBox 128)
@@ -17,10 +18,10 @@ const refs = {};
 export async function renderToday() {
   const today = toISODate();
   const dates = weekDates();
-  const [settings, steps, habits, weekData] = await Promise.all([
-    loadSettings(), getSteps(today), getHabits(today), loadWeek(dates),
+  const [settings, steps, habits, weekData, activeId] = await Promise.all([
+    loadSettings(), getSteps(today), getHabits(today), loadWeek(dates), getActiveSessionId(),
   ]);
-  state = { date: today, dates, settings, steps, habits, week: summarizeWeek(dates, weekData, settings, today) };
+  state = { date: today, dates, settings, steps, habits, activeId, week: summarizeWeek(dates, weekData, settings, today) };
 
   document.getElementById('today-date').textContent = formatDay(new Date());
   document.getElementById('today-body').replaceChildren(
@@ -221,9 +222,9 @@ function fillWeek() {
 function actionsCard() {
   const icon = (d) => h('span', { html: `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>` });
   return h('section', { class: 'actions', 'aria-label': 'Actions' },
-    h('button', { class: 'btn btn--strength btn--lg', type: 'button', onclick: () => toast(t('actions.comingPhase3')) },
+    h('button', { class: `btn btn--lg ${state.activeId ? 'btn--resume' : 'btn--strength'}`, type: 'button', onclick: () => startOrResume(state.activeId) },
       icon('<path d="M6.5 8v8M17.5 8v8M3.5 10v4M20.5 10v4M6.5 12h11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'),
-      t('actions.startWorkout')),
+      state.activeId ? t('wk.resume') : t('actions.startWorkout')),
     h('button', { class: 'btn btn--tint-climb', type: 'button', onclick: () => toast(t('actions.comingPhase4')) },
       icon('<path d="M3 20l6-9 3.5 4.5L15 12l6 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'),
       t('actions.logClimb')),

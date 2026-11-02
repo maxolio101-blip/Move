@@ -16,10 +16,11 @@ js/version.js           APP_VERSION
 js/strings.js           All UI strings (add a French table later)
 js/pwa.js               Standalone detection, SW registration + update banner
 js/db.js                IndexedDB wrapper
+js/repo.js              Data access used by the views
 js/seed.js              First-launch data (settings, exercises, "Upper")
-js/lib/                 Pure, testable logic (dates, model/defaults)
-js/ui/                  DOM helper, shell (tabs/sheet/toast), theme
-js/views/               One module per screen
+js/lib/                 Pure, testable logic (dates, model, steps, week, workout)
+js/ui/                  DOM helper, shell (tabs/sheet/toast), stack navigation, theme
+js/views/               Today, workout, templates, settings
 icons/                  App icons (apple-touch-icon 180×180, 192, 512, maskable)
 tests/lib.test.mjs      Unit tests for js/lib (run on a computer: node tests/lib.test.mjs)
 ```

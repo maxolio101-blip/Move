@@ -76,6 +76,10 @@ export function openSheet(content, { label = '', dismissible = true, onClose = n
   }));
 }
 
+export function setSheetDismissible(on) {
+  document.getElementById('sheet-layer').dataset.dismissible = String(on);
+}
+
 export function closeSheet() {
   const layer = $('#sheet-layer');
   if (layer.hidden) return;

@@ -7,6 +7,8 @@ import { withDefaults } from './lib/model.js';
 import { applyTheme } from './ui/theme.js';
 import { initTabs, initSheet, showUpdateBanner, onTabChange } from './ui/shell.js';
 import { renderToday, refreshTodayIfStale } from './views/today.js';
+import { setWorkoutChangeHandler, startOrResume } from './views/workout.js';
+import { getActiveSessionId } from './repo.js';
 import { renderSettings } from './views/settings.js';
 
 async function boot() {
@@ -35,8 +37,13 @@ async function boot() {
   const refreshSettings = () => renderSettings({ standalone });
   onTabChange((tab) => { if (tab === 'settings') refreshSettings(); });
   initTabs();
+  setWorkoutChangeHandler(() => renderToday());
   await renderToday();
   refreshSettings();
+
+  // A workout was in progress when the app was closed: reopen it exactly there.
+  const activeId = await getActiveSessionId();
+  if (activeId) startOrResume(activeId);
 
   // Day rollover while the app sat in the background (iOS keeps PWAs alive).
   document.addEventListener('visibilitychange', () => {

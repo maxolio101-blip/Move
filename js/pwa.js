@@ -14,6 +14,11 @@ export function isPreview() {
 
 export function registerServiceWorker({ onUpdateReady }) {
   if (!('serviceWorker' in navigator)) return;
+  // Already installed and offline: don't touch the network at all.
+  if (!navigator.onLine && navigator.serviceWorker.controller) {
+    window.addEventListener('online', () => registerServiceWorker({ onUpdateReady }), { once: true });
+    return;
+  }
 
   let reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -37,8 +42,9 @@ export function registerServiceWorker({ onUpdateReady }) {
     });
 
     // iOS keeps PWAs alive in the background: check again when we come back.
+    // Skipped offline: a network attempt in airplane mode makes iOS show its alert.
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {});
     });
   }).catch((err) => console.warn('[sw] registration failed', err));
 }
