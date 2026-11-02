@@ -1,0 +1,148 @@
+/* =========================================================================
+   Move — design tokens
+   Dark first. Light mode applies when the system asks for it (and the
+   user hasn't forced dark), or when the user forces light.
+   All accent/text pairs verified WCAG AA (>= 4.5:1) — see README.
+   ========================================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg:            #0B0B0F;
+  --bg-elevated:   #141418;
+  --card:          #1C1C21;
+  --card-glass:    rgba(28, 28, 33, 0.72);
+  --chrome-glass:  rgba(16, 16, 20, 0.78);
+  --hairline:      rgba(255, 255, 255, 0.08);
+  --fill:          rgba(255, 255, 255, 0.08);
+  --fill-strong:   rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text:          #F5F5F7;
+  --text-2:        #A1A1AA;
+  --text-3:        #6E6E78;
+  --on-accent:     #0B0B0F;
+
+  /* Activity accents (one per activity, used everywhere) */
+  --strength:      #FF6A4D;   /* Ember   */
+  --climb:         #F5B83D;   /* Ochre   */
+  --swim:          #38C6E8;   /* Lagoon  */
+  --habits:        #B69CFF;   /* Lavender*/
+  --steps:         #8FE36A;   /* Lime    */
+
+  --strength-soft: rgba(255, 106, 77, 0.16);
+  --climb-soft:    rgba(245, 184, 61, 0.16);
+  --swim-soft:     rgba(56, 198, 232, 0.16);
+  --habits-soft:   rgba(182, 156, 255, 0.16);
+  --steps-soft:    rgba(143, 227, 106, 0.16);
+
+  /* System */
+  --danger:        #FF5A5F;
+  --warn:          #F5B83D;
+  --focus:         #8AB4FF;
+
+  /* Spacing — 8 px grid (4 for fine tuning) */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 40px; --s-8: 48px;
+
+  /* Radius */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;   /* cards */
+  --r-pill: 999px;
+
+  /* Type */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+          system-ui, "Helvetica Neue", Arial, sans-serif;
+  --fs-caption: 13px;
+  --fs-body: 17px;
+  --fs-callout: 16px;
+  --fs-title3: 20px;
+  --fs-title2: 22px;
+  --fs-title1: 28px;
+  --fs-large: 34px;
+  --fs-hero: 56px;
+
+  /* Sizes */
+  --tap: 48px;
+  --tap-lg: 56px;
+  --tabbar-h: 56px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 140ms;
+  --dur: 260ms;
+  --dur-sheet: 420ms;
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Light theme — shared values, applied in two situations */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg:            #F2F2F5;
+    --bg-elevated:   #FFFFFF;
+    --card:          #FFFFFF;
+    --card-glass:    rgba(255, 255, 255, 0.78);
+    --chrome-glass:  rgba(246, 246, 249, 0.82);
+    --hairline:      rgba(0, 0, 0, 0.08);
+    --fill:          rgba(0, 0, 0, 0.05);
+    --fill-strong:   rgba(0, 0, 0, 0.09);
+    --text:          #111114;
+    --text-2:        #5E5E69;
+    --text-3:        #8E8E98;
+    --on-accent:     #FFFFFF;
+    --strength:      #C2391C;
+    --climb:         #8F5D00;
+    --swim:          #00718F;
+    --habits:        #6545D1;
+    --steps:         #2E7613;
+    --strength-soft: rgba(194, 57, 28, 0.10);
+    --climb-soft:    rgba(143, 93, 0, 0.10);
+    --swim-soft:     rgba(0, 113, 143, 0.10);
+    --habits-soft:   rgba(101, 69, 209, 0.10);
+    --steps-soft:    rgba(46, 118, 19, 0.10);
+    --danger:        #C8102E;
+    --warn:          #8F5D00;
+    --focus:         #0A5FD6;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:            #F2F2F5;
+  --bg-elevated:   #FFFFFF;
+  --card:          #FFFFFF;
+  --card-glass:    rgba(255, 255, 255, 0.78);
+  --chrome-glass:  rgba(246, 246, 249, 0.82);
+  --hairline:      rgba(0, 0, 0, 0.08);
+  --fill:          rgba(0, 0, 0, 0.05);
+  --fill-strong:   rgba(0, 0, 0, 0.09);
+  --text:          #111114;
+  --text-2:        #5E5E69;
+  --text-3:        #8E8E98;
+  --on-accent:     #FFFFFF;
+  --strength:      #C2391C;
+  --climb:         #8F5D00;
+  --swim:          #00718F;
+  --habits:        #6545D1;
+  --steps:         #2E7613;
+  --strength-soft: rgba(194, 57, 28, 0.10);
+  --climb-soft:    rgba(143, 93, 0, 0.10);
+  --swim-soft:     rgba(0, 113, 143, 0.10);
+  --habits-soft:   rgba(101, 69, 209, 0.10);
+  --steps-soft:    rgba(46, 118, 19, 0.10);
+  --danger:        #C8102E;
+  --warn:          #8F5D00;
+  --focus:         #0A5FD6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur: 0ms; --dur-sheet: 0ms; }
+}
