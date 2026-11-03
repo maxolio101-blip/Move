@@ -15,13 +15,14 @@ const chevron = () => h('span', { class: 'row__chev', 'aria-hidden': 'true', htm
 
 // ---- Picker: choose a template to start ---------------------------------
 
-export function templatePickerView(stack, { onStart, onClose }) {
+export function templatePickerView(stack, { onStart, onClose, plannedTemplateId = null }) {
   const list = h('div', { class: 'list' });
   const load = async () => {
-    const [templates, exMap] = await Promise.all([getTemplates(), exerciseMap()]);
+    const [all, exMap] = await Promise.all([getTemplates(), exerciseMap()]);
+    const templates = [...all.filter((x) => x.id === plannedTemplateId), ...all.filter((x) => x.id !== plannedTemplateId)];
     list.replaceChildren(...templates.map((tpl) => h('div', { class: 'tpl-row' },
       h('button', { class: 'tpl-row__main', type: 'button', onclick: () => onStart(tpl) },
-        h('span', { class: 'tpl-row__name' }, tpl.name),
+        h('span', { class: 'tpl-row__name' }, tpl.name, tpl.id === plannedTemplateId && h('span', { class: 'badge' }, t('plan.today'))),
         h('span', { class: 'tpl-row__sub' }, tpl.exercises.map((e) => exMap.get(e.exerciseId)?.name || '?').join(' · ') || t('tpl.empty'))),
       h('button', { class: 'tpl-row__edit', type: 'button', 'aria-label': `${t('tpl.edit')} ${tpl.name}`, onclick: () => stack.push(templateEditorView(stack, tpl.id)) }, t('tpl.edit')))));
     if (!templates.length) list.replaceChildren(h('p', { class: 'empty' }, t('tpl.none')));

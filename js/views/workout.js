@@ -11,10 +11,12 @@ import { incrementFor } from '../lib/model.js';
 import {
   buildSession, swapBlock, addSet, removeSet, stepLoad, stepReps, parseLoad, parseReps,
   formatLoad, restRemaining, elapsed, sessionStats, loadIncreases, firstOpenBlock,
+  propagate, lastSetsFor, formatLast, formatTarget,
 } from '../lib/workout.js';
+import { unlockAudio, beep, keepAwake } from '../ui/sound.js';
 import {
   loadSettings, exerciseMap, getAllStrength, getSession, saveSession, deleteSession,
-  setActiveSessionId,
+  setActiveSessionId, getTemplate,
 } from '../repo.js';
 import { templatePickerView, exercisePickerView } from './templates.js';
 
@@ -26,8 +28,17 @@ export function setWorkoutChangeHandler(fn) { onChangeCb = fn; }
 
 // ---- Entry points -------------------------------------------------------
 
-/** Today's big button: resume the active session, or pick a template. */
-export async function startOrResume(activeId) {
+async function createSession(tpl) {
+  const sessions = await getAllStrength();
+  const session = buildSession({ id: uid(), template: tpl, sessions, now: Date.now(), date: toISODate() });
+  await saveSession(session);
+  await setActiveSessionId(session.id);
+  onChangeCb();
+  return session;
+}
+
+/** Resume the active session, or pick a template (planned one listed first). */
+export async function startOrResume(activeId, { plannedTemplateId = null } = {}) {
   if (activeId) {
     const s = await getSession(activeId);
     if (s && !s.endedAt) return openWorkout(s);
@@ -35,19 +46,24 @@ export async function startOrResume(activeId) {
   }
   const stack = createStack({ onEmpty: closeSheet });
   stack.push(templatePickerView(stack, {
+    plannedTemplateId,
     onClose: closeSheet,
     onStart: async (tpl) => {
       if (!tpl.exercises.length) { toast(t('tpl.exercisesRequired')); return; }
-      const sessions = await getAllStrength();
-      const session = buildSession({ id: uid(), template: tpl, sessions, now: Date.now(), date: toISODate() });
-      await saveSession(session);
-      await setActiveSessionId(session.id);
-      onChangeCb();
+      const session = await createSession(tpl);
       setSheetDismissible(false);
       stack.reset(workoutView(stack, session));
     },
   }));
   openSheet(stack.el, { label: t('tpl.chooseTitle'), dismissible: true, onClose: () => onChangeCb() });
+}
+
+/** One tap from Today: start the planned template directly. */
+export async function startTemplate(templateId, activeId) {
+  if (activeId) return startOrResume(activeId);
+  const tpl = await getTemplate(templateId);
+  if (!tpl || !tpl.exercises.length) return startOrResume(null);
+  openWorkout(await createSession(tpl));
 }
 
 export async function openWorkout(session) {
@@ -102,10 +118,11 @@ function workoutView(stack, session) {
       h('button', { class: 'rest__btn', type: 'button', onclick: adj(15), 'aria-label': t('wk.rest15plus') }, '+15'),
       h('button', { class: 'rest__btn rest__btn--skip', type: 'button', onclick: skip, 'aria-label': t('wk.restSkip') }, '✕'));
     let wasDone = false;
+    let wasRunning = false;   // beep only when the countdown is seen reaching 0
     return {
       el,
       update(now) {
-        if (!session.restEndsAt) { el.hidden = true; wasDone = false; return; }
+        if (!session.restEndsAt) { el.hidden = true; wasDone = false; wasRunning = false; return; }
         const left = restRemaining(session.restEndsAt, now);
         if (left <= 0 && now - session.restEndsAt > REST_LINGER_MS) { session.restEndsAt = null; persist(); el.hidden = true; return; }
         el.hidden = false;
@@ -115,9 +132,10 @@ function workoutView(stack, session) {
         value.textContent = done ? t('wk.go') : formatDuration(left * 1000);
         const total = Math.max(1, session.restTotal || settings?.restTimerSec || 90);
         fill.style.transform = `scaleX(${done ? 1 : Math.max(0, Math.min(1, left / total))})`;
-        if (done && !wasDone) { el.setAttribute('aria-live', 'assertive'); }
+        if (done && !wasDone && wasRunning) { el.setAttribute('aria-live', 'assertive'); beep(); }
         if (!done) el.setAttribute('aria-live', 'off');
         wasDone = done;
+        wasRunning = !done;
       },
     };
   }
@@ -130,6 +148,17 @@ function workoutView(stack, session) {
     const inc = incrementFor(ex, settings);
     const isBW = ex.equipment === 'bodyweight';
 
+    const inputs = [];          // [{ repsIn, loadIn }] per set, for in-place propagation
+    const spread = (si, field, value) => {
+      const next = propagate(block, si, field, value);
+      next.sets.forEach((s, j) => {
+        if (j <= si || block.sets[j].completed) return;
+        block.sets[j][field] = s[field];
+        const r = inputs[j];
+        if (field === 'reps') r.repsIn.value = String(s.reps); else r.loadIn.value = formatLoad(s.load);
+      });
+    };
+
     const rows = block.sets.map((set, si) => {
       const repsIn = h('input', {
         class: 'stepper__value num', inputmode: 'numeric', pattern: '[0-9]*', value: String(set.reps),
@@ -139,22 +168,23 @@ function workoutView(stack, session) {
         class: 'stepper__value num', inputmode: 'decimal', value: formatLoad(set.load),
         'aria-label': `${ex.name}, ${t('wk.set')} ${si + 1}, ${t('wk.load')}`, autocomplete: 'off', enterkeyhint: 'done',
       });
+      inputs[si] = { repsIn, loadIn };
       const selectAll = (e) => setTimeout(() => e.target.select(), 0);
       repsIn.addEventListener('focus', selectAll);
       loadIn.addEventListener('focus', selectAll);
       repsIn.addEventListener('change', () => {
         const v = parseReps(repsIn.value);
         if (v == null) { repsIn.value = String(set.reps); return; }
-        set.reps = v; repsIn.value = String(v); persist();
+        set.reps = v; repsIn.value = String(v); spread(si, 'reps', v); persist();
       });
       loadIn.addEventListener('change', () => {
         const v = parseLoad(loadIn.value);
         if (v == null) { loadIn.value = formatLoad(set.load); return; }
-        set.load = v; loadIn.value = formatLoad(v); persist();
+        set.load = v; loadIn.value = formatLoad(v); spread(si, 'load', v); persist();
       });
       const step = (kind, dir) => () => {
-        if (kind === 'reps') { set.reps = stepReps(set.reps, dir); repsIn.value = String(set.reps); }
-        else { set.load = stepLoad(set.load, inc, dir); loadIn.value = formatLoad(set.load); }
+        if (kind === 'reps') { set.reps = stepReps(set.reps, dir); repsIn.value = String(set.reps); spread(si, 'reps', set.reps); }
+        else { set.load = stepLoad(set.load, inc, dir); loadIn.value = formatLoad(set.load); spread(si, 'load', set.load); }
         persist();
       };
       const doneBtn = h('button', {
@@ -162,11 +192,12 @@ function workoutView(stack, session) {
         'aria-label': `${t('wk.complete')} ${t('wk.set')} ${si + 1}`,
         onclick: () => {
           document.activeElement?.blur?.();       // commit a value being typed
+          unlockAudio();                           // iOS: audio must start from a tap
           set.completed = !set.completed;
           doneBtn.setAttribute('aria-pressed', String(set.completed));
           row.classList.toggle('is-done', set.completed);
           if (set.completed) {
-            const sec = settings.restTimerSec;
+            const sec = block.target?.restSec || settings.restTimerSec;
             session.restEndsAt = Date.now() + sec * 1000;
             session.restTotal = sec;
           }
@@ -191,11 +222,16 @@ function workoutView(stack, session) {
       `±${formatLoad(inc)} kg`,
     ].filter(Boolean).join(' · ');
 
+    const targetText = formatTarget(block.substitutedFrom ? null : block.target);
+    const lastText = formatLast(lastSetsFor(sessions, block.exerciseId, session.id), isBW);
+
     const section = h('section', { class: 'block', 'data-block': bi, 'aria-labelledby': `blk-${bi}` },
       h('header', { class: 'block__head' },
         h('div', { class: 'block__titles' },
           h('h3', { class: 'block__name', id: `blk-${bi}` }, ex.name),
           h('p', { class: 'block__sub' }, sub),
+          targetText && h('p', { class: 'block__target num' }, `${t('wk.target')}: ${targetText}`),
+          lastText && h('p', { class: 'block__last num' }, `${t('wk.last')}: ${lastText}`),
           orig && h('p', { class: 'block__swap' }, `${t('wk.insteadOf')} ${orig.name}`)),
         h('button', { class: 'pill-btn', type: 'button', onclick: () => openSwap(bi), 'aria-label': `${t('wk.swap')} ${ex.name}` }, `⇄ ${t('wk.swap')}`)),
       h('div', { class: 'set-cols', 'aria-hidden': 'true' },
@@ -203,8 +239,17 @@ function workoutView(stack, session) {
       h('ol', { class: 'set-list' }, rows),
       h('div', { class: 'block__foot' },
         h('button', { class: 'ghost-btn', type: 'button', onclick: () => { session.exercises[bi] = addSet(block); persist(); repaintBlock(bi); } }, `+ ${t('wk.addSet')}`),
-        h('button', { class: 'ghost-btn', type: 'button', disabled: block.sets.length <= 1 || null, onclick: () => { session.exercises[bi] = removeSet(block); persist(); repaintBlock(bi); } }, `− ${t('wk.removeSet')}`)));
+        h('button', { class: 'ghost-btn', type: 'button', disabled: block.sets.length <= 1 || null, onclick: () => { session.exercises[bi] = removeSet(block); persist(); repaintBlock(bi); } }, `− ${t('wk.removeSet')}`),
+        h('button', { class: 'ghost-btn ghost-btn--danger', type: 'button', onclick: () => removeExercise(bi, ex.name) }, `× ${t('wk.removeExercise')}`)));
     return section;
+  }
+
+  function removeExercise(bi, name) {
+    if (session.exercises.length <= 1) { toast(t('wk.lastExercise'), 3000); return; }
+    if (!confirm(t('wk.removeExerciseConfirm').replace('{name}', name))) return;
+    session.exercises.splice(bi, 1);      // this session only — the template is untouched
+    persist();
+    blocksEl.replaceChildren(...session.exercises.map((_, i) => renderBlock(i)));
   }
 
   function repaintBlock(bi) {
@@ -248,12 +293,14 @@ function workoutView(stack, session) {
     await saveSession(session);
     await setActiveSessionId(null);
     stopTicker();
+    keepAwake(false);
     stack.reset(summaryView(session, sessions, exMap));
   }
 
   async function discard(skipConfirm = false) {
     if (!skipConfirm && !confirm(t('wk.discardConfirm'))) return;
     stopTicker();
+    keepAwake(false);
     await deleteSession(session.id);
     await setActiveSessionId(null);
     closeSheet();
@@ -264,6 +311,7 @@ function workoutView(stack, session) {
     [settings, exMap, sessions] = await Promise.all([loadSettings(), exerciseMap(), getAllStrength()]);
     blocksEl.replaceChildren(...session.exercises.map((_, i) => renderBlock(i)));
     startTicker();
+    keepAwake(true);
     document.addEventListener('visibilitychange', onVis);
     // Resume where you left off
     const open = firstOpenBlock(session);
@@ -280,9 +328,9 @@ function workoutView(stack, session) {
   let inited = false;
   return {
     title: session.templateName,
-    leading: { label: t('wk.hide'), onClick: () => { stopTicker(); document.removeEventListener('visibilitychange', onVis); closeSheet(); } },
+    leading: { label: t('wk.hide'), onClick: () => { stopTicker(); keepAwake(false); document.removeEventListener('visibilitychange', onVis); closeSheet(); } },
     trailing: { label: t('wk.finish'), strong: true, onClick: finish },
-    onShow: () => { if (!inited) { inited = true; init(); } else { exerciseMap().then((m) => { exMap = m; }); startTicker(); } },
+    onShow: () => { if (!inited) { inited = true; init(); } else { exerciseMap().then((m) => { exMap = m; }); startTicker(); keepAwake(true); } },
     render: () => root,
   };
 }

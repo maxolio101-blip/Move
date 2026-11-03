@@ -8,10 +8,12 @@
 //   climbs      keyPath id, index 'date'
 //   swims       keyPath id, index 'date'
 //   habits      keyPath date               (one record per day)
-//   steps       keyPath date               (one record per day)
+//   steps       keyPath date               (one record per day; no longer shown)
+//   weights     keyPath date               (one weigh-in per day, kg)
+//   plan        keyPath date               (planned items per day)
 
 export const DB_NAME = 'move';
-export const DB_VERSION = 1;
+export const DB_VERSION = 3;   // v2: + weights · v3: + plan
 export const SCHEMA_VERSION = 1;          // version written into JSON backups
 
 export const STORES = {
@@ -23,6 +25,8 @@ export const STORES = {
   swims: { keyPath: 'id', indexes: ['date'] },
   habits: { keyPath: 'date' },
   steps: { keyPath: 'date' },
+  weights: { keyPath: 'date' },
+  plan: { keyPath: 'date' },
 };
 
 let dbPromise = null;

@@ -2,7 +2,7 @@
 // On every deploy: bump VERSION here AND APP_VERSION in js/version.js,
 // and add any new file to ASSETS.
 
-const VERSION = 'move-v0.3.0';
+const VERSION = 'move-v0.5.0';
 
 const ASSETS = [
   './',
@@ -18,7 +18,13 @@ const ASSETS = [
   './js/db.js',
   './js/seed.js',
   './js/repo.js',
-  './js/lib/steps.js',
+  './js/lib/scores.js',
+  './js/lib/plan.js',
+  './js/data/phase1.js',
+  './js/ui/habits.js',
+  './js/ui/sound.js',
+  './js/views/calendar.js',
+  './js/views/quicklog.js',
   './js/lib/week.js',
   './js/lib/date.js',
   './js/lib/workout.js',

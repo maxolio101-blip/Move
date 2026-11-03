@@ -2,7 +2,7 @@
 import { applyI18n, t } from './strings.js';
 import { isStandalone, isPreview, registerServiceWorker } from './pwa.js';
 import { openDB, getKV, setKV, requestPersistence } from './db.js';
-import { seedIfNeeded } from './seed.js';
+import { seedIfNeeded, importPlanIfNeeded } from './seed.js';
 import { withDefaults } from './lib/model.js';
 import { applyTheme } from './ui/theme.js';
 import { initTabs, initSheet, showUpdateBanner, onTabChange } from './ui/shell.js';
@@ -23,6 +23,7 @@ async function boot() {
 
   await openDB();
   const meta = await seedIfNeeded();
+  await importPlanIfNeeded();
   if (meta.persisted !== true) {
     const persisted = await requestPersistence();
     await setKV('meta', { ...meta, persisted });
@@ -34,7 +35,7 @@ async function boot() {
   document.getElementById('app').hidden = false;
   initSheet();
 
-  const refreshSettings = () => renderSettings({ standalone });
+  const refreshSettings = () => renderSettings({ standalone, onGoalChange: renderToday });
   onTabChange((tab) => { if (tab === 'settings') refreshSettings(); });
   initTabs();
   setWorkoutChangeHandler(() => renderToday());

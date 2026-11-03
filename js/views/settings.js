@@ -3,11 +3,14 @@
 import { h } from '../ui/dom.js';
 import { t } from '../strings.js';
 import { getKV, setKV, storageEstimate } from '../db.js';
+import { updateSettings } from '../repo.js';
+import { parseLoad, formatLoad } from '../lib/workout.js';
+import { toast } from '../ui/shell.js';
 import { withDefaults } from '../lib/model.js';
 import { applyTheme } from '../ui/theme.js';
 import { APP_VERSION } from '../version.js';
 
-export async function renderSettings({ standalone, onThemeChange }) {
+export async function renderSettings({ standalone, onThemeChange, onGoalChange }) {
   const body = document.getElementById('settings-body');
   const settings = withDefaults(await getKV('settings'));
   const meta = (await getKV('meta')) || {};
@@ -35,7 +38,27 @@ export async function renderSettings({ standalone, onThemeChange }) {
     h('span', { class: 'list__label' }, label),
     h('span', { class: 'list__value num' }, value));
 
+  const goalInput = (key, label) => {
+    const id = `goal-${key}`;
+    const input = h('input', { class: 'input input--inline num', id, inputmode: 'decimal', autocomplete: 'off', enterkeyhint: 'done', value: formatLoad(settings.weightGoal[key]) });
+    input.addEventListener('change', async () => {
+      const v = parseLoad(input.value);
+      const cur = withDefaults(await getKV('settings'));
+      if (v == null || v < 20 || v > 300) { input.value = formatLoad(cur.weightGoal[key]); return; }
+      input.value = formatLoad(v);
+      await updateSettings({ weightGoal: { ...cur.weightGoal, [key]: v } });
+      toast(t('settings.goalSaved'));
+      onGoalChange?.();
+    });
+    return h('div', { class: 'list__row' }, h('label', { class: 'list__label', for: id }, label), input);
+  };
+
   body.replaceChildren(
+    h('h2', { class: 'section-label' }, t('settings.goal')),
+    h('div', { class: 'list' },
+      goalInput('start', t('settings.goalStart')),
+      goalInput('target', t('settings.goalTarget'))),
+
     h('h2', { class: 'section-label' }, t('settings.appearance')),
     h('div', { class: 'list' }, h('div', { class: 'list__stack' }, seg)),
 

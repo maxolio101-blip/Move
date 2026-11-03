@@ -11,10 +11,15 @@ export const DEFAULT_INCREMENTS = {
   bodyweight: 2.5,   // step used only when adding load to a bodyweight move (base load = 0 kg)
 };
 
-export const HABITS = ['yogaAM', 'meditationAM', 'yogaPM', 'meditationPM', 'creatine', 'dogWalk'];
+// Keys stay stable in storage: 'yogaAM'/'meditationAM' are displayed as Yoga /
+// Meditation. Retired keys (yogaPM, meditationPM) remain in old records, unused.
+export const HABITS = ['yogaAM', 'meditationAM', 'creatine', 'whey', 'collagen', 'dogWalk'];
+
+// French climbing grades, 4 → 8c (with "+").
+export const GRADES = ['4', '4+', ...['5', '6', '7'].flatMap((n) => ['a', 'a+', 'b', 'b+', 'c', 'c+'].map((l) => n + l)), '8a', '8a+', '8b', '8b+', '8c'];
 
 export const DEFAULT_SETTINGS = {
-  stepTarget: 8000,
+  weightGoal: { start: 75.5, target: 79 },   // kg — editable in Settings
   weeklyTargets: {
     gym: 4,               // gym sessions with 1 climbing session…
     gymWithTwoClimbs: 3,  // …drops to 3 once 2 climbing sessions are logged
@@ -35,6 +40,7 @@ export function withDefaults(stored) {
     ...s,
     weeklyTargets: { ...DEFAULT_SETTINGS.weeklyTargets, ...(s.weeklyTargets || {}) },
     increments: { ...DEFAULT_SETTINGS.increments, ...(s.increments || {}) },
+    weightGoal: { ...DEFAULT_SETTINGS.weightGoal, ...(s.weightGoal || {}) },
   };
 }
 

@@ -25,39 +25,93 @@ const en = {
   },
 
   activity: {
-    strength: 'Strength', climb: 'Climbing', swim: 'Swim', habits: 'Habits', steps: 'Steps',
+    strength: 'Strength', climb: 'Climbing', swim: 'Swim', habits: 'Habits',
   },
 
-  steps: {
-    title: 'Steps',
-    of: 'of',
-    goalMet: 'Goal reached',
-    toGo: 'to go',
-    noData: 'No steps yet today',
-    paste: 'Paste steps',
-    manual: 'Enter',
-    savedToday: 'Steps saved',
-    savedFor: 'Steps saved for',
-    lowerConfirm: 'This is lower than what is already saved for that day. Replace it?',
-    clipboardDenied: 'Couldn’t read the clipboard. Tap Paste in the bubble, or enter steps manually.',
-    errEmpty: 'Clipboard is empty. Run the “Move steps” shortcut first.',
-    errFormat: 'Clipboard doesn’t contain Move steps. Run the “Move steps” shortcut first.',
-    errDate: 'The date in the clipboard isn’t valid.',
-    errFuture: 'The date in the clipboard is in the future.',
-    errNumber: 'The step count in the clipboard isn’t valid.',
-    manualTitle: 'Enter steps',
+  scores: {
+    consistency: 'Consistency',
+    consistencySub: 'sessions vs target',
+    since: 'since',
+    noSessions: 'Log a session to start',
+    goal: 'Weight goal',
+    noWeight: 'Log your weight',
+    avg7: '7-day avg',
+    oneWeighIn: 'latest',
+    logWeight: 'Log weight',
+  },
+
+  weight: {
+    title: 'Log weight',
+    kg: 'Weight (kg)',
     date: 'Date',
-    count: 'Steps',
-    save: 'Save',
-    cancel: 'Cancel',
-    invalidManual: 'Enter a number between 0 and 150,000.',
+    invalid: 'Enter a weight between 20 and 300 kg.',
+    saved: 'Weight saved',
+    deleted: 'Weight removed',
+    remove: 'Remove this weigh-in',
+  },
+
+  month: {
+    title: 'Calendar',
+    prev: 'Previous month',
+    next: 'Next month',
+    names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    tapDay: 'Tap a day to edit it.',
+  },
+
+  day: {
+    habits: 'Habits',
+    weight: 'Weight',
+    sessions: 'Sessions',
+    none: 'No session this day.',
+    saveWeight: 'Save weight',
+    future: 'Habits, weight and sessions can be filled in once the day has come.',
+  },
+
+  climb: {
+    title: 'Log climbing',
+    where: 'Where',
+    indoor: 'Indoor', outdoor: 'Outdoor',
+    duration: 'Duration',
+    grade: 'Best grade sent',
+    noGrade: 'No send',
+    saved: 'Climbing saved',
+    session: 'Climbing',
+  },
+
+  swim: {
+    title: 'Log swim',
+    duration: 'Duration',
+    distance: 'Distance (m, optional)',
+    saved: 'Swim saved',
+    session: 'Swim',
+  },
+
+  min: 'min',
+
+  plan: {
+    title: 'Plan',
+    week: 'Week',
+    today: 'Today',
+    rest: 'Rest day',
+    restSub: 'Recovery. Habits still count.',
+    start: 'Start',
+    other: 'Other workout',
+    done: 'Done today',
+    climbToday: 'Climbing today',
+    swimToday: 'Swim today',
+    logIt: 'Log it',
+    dayPlan: 'Plan',
+    restOption: 'Rest',
+    climbOption: 'Climbing',
+    swimOption: 'Swim',
+    saved: 'Plan updated',
+    planned: 'planned',
   },
 
   habits: {
     title: 'Habits',
-    yogaAM: 'Yoga AM', meditationAM: 'Meditation AM',
-    yogaPM: 'Yoga PM', meditationPM: 'Meditation PM',
-    creatine: 'Creatine', dogWalk: 'Dog walk',
+    yogaAM: 'Yoga', meditationAM: 'Meditation',
+    creatine: 'Creatine', whey: 'Whey', collagen: 'Collagen', dogWalk: 'Dog walk',
   },
 
   week: {
@@ -65,7 +119,7 @@ const en = {
     gym: 'Gym', climbing: 'Climbing', swim: 'Swim',
     days: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
     daysLong: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-    stepsGoal: 'step goal met',
+    open: 'Open the monthly calendar',
     habitsOf: 'habits',
   },
 
@@ -143,13 +197,17 @@ const en = {
     loadsUp: 'Loads that went up',
     noLoadsUp: 'No load increase compared with last time.',
     resume: 'Resume workout',
+    last: 'Last',
+    target: 'Target',
+    removeExercise: 'Remove exercise',
+    removeExerciseConfirm: 'Remove “{name}” from this session? The template stays unchanged.',
+    lastExercise: 'A workout needs at least one exercise. Discard it instead.',
   },
 
   actions: {
     startWorkout: 'Start workout',
     logClimb: 'Climbing',
     logSwim: 'Swim',
-    comingPhase4: 'Quick log arrives in phase 4',
   },
 
   settings: {
@@ -159,6 +217,10 @@ const en = {
     storage: 'Storage',
     persistent: 'Persistent storage',
     granted: 'Granted', notGranted: 'Not granted', unknown: 'Unknown',
+    goal: 'Weight goal',
+    goalStart: 'Start weight (kg)',
+    goalTarget: 'Target weight (kg)',
+    goalSaved: 'Goal saved',
     used: 'Space used',
     about: 'About',
     version: 'Version',

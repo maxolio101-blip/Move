@@ -18,9 +18,9 @@ js/pwa.js               Standalone detection, SW registration + update banner
 js/db.js                IndexedDB wrapper
 js/repo.js              Data access used by the views
 js/seed.js              First-launch data (settings, exercises, "Upper")
-js/lib/                 Pure, testable logic (dates, model, steps, week, workout)
+js/lib/                 Pure, testable logic (dates, model, week, scores, workout)
 js/ui/                  DOM helper, shell (tabs/sheet/toast), stack navigation, theme
-js/views/               Today, workout, templates, settings
+js/views/               Today, workout, templates, calendar, quick logs, settings
 icons/                  App icons (apple-touch-icon 180×180, 192, 512, maskable)
 tests/lib.test.mjs      Unit tests for js/lib (run on a computer: node tests/lib.test.mjs)
 ```
@@ -43,34 +43,6 @@ Upload the changed files (or the whole unzipped folder again) the same way (same
 2. Open **Safari**, paste the URL, open it. You'll see the *Install Move* screen — that's expected.
 3. Tap **Share** (square with arrow) → scroll → **Add to Home Screen** → keep the name *Move* → **Add**.
 4. Open Move **from the Home Screen icon** only. Data lives in the installed app's own storage, not in Safari or DuckDuckGo.
-
-## iOS Shortcut: copy today's steps
-
-The shortcut reads today's steps from Health and copies `MOVE_STEPS|YYYY-MM-DD|NUMBER` to the clipboard. Move's **Paste steps** button reads it.
-
-### Create the shortcut
-1. Open **Shortcuts** → **+** (top right). Tap the title and rename it **Move steps**.
-2. Add action **Find Health Samples**:
-   - *Type*: **Steps**
-   - Add filter **Start Date** → **is today**
-   - *Group By*: **Day**  (gives one daily total, like the Health app)
-3. Add action **Calculate Statistics** → **Sum** of *Health Samples*.
-4. Add action **Round Number** → *Statistics Result*, to **Ones Place**.
-5. Add action **Format Date** → *Current Date*, *Date Format*: **Custom**, format string: `yyyy-MM-dd`, *Time Format*: **None**.
-6. Add action **Text** and type `MOVE_STEPS|`, insert variable *Formatted Date*, type `|`, insert variable *Rounded Number*. No spaces.
-7. Add action **Copy to Clipboard** → *Text*.
-8. Tap **▶** once. iOS asks for Health access → **Allow**. Open Move → **Paste steps**. Compare the number with the Health app the first time.
-
-### Run it every evening at 21:00
-1. Shortcuts → **Automation** tab → **+** → **Time of Day**.
-2. **21:00**, *Repeat*: **Daily**, select **Run Immediately** (and turn off *Notify When Run* if you like) → **Next**.
-3. Choose **Move steps** → **Done**.
-4. Later that evening, open Move → **Paste steps**.
-
-Notes
-- Health data is protected while the iPhone is locked, so an automation that fires on a locked phone may read 0 or fail. Move never silently replaces a higher count with a lower one: it asks first. If that happens, run the shortcut manually.
-- If you copy something else after 21:00, just run the shortcut again before pasting.
-- The first paste may show an iOS **Paste** bubble: tap it. Move then reads the clipboard.
 
 ## Reviewing on a computer
 Open `https://<your-username>.github.io/move/?preview` to bypass the install screen. Data entered that way stays in that browser only.

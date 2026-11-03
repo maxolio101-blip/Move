@@ -82,6 +82,7 @@ export function buildSession({ id, template, sessions, now, date }) {
       key: `${i}-${te.exerciseId}`,
       exerciseId: te.exerciseId,
       substitutedFrom: null,
+      target: { sets: te.sets, reps: te.reps, repsMax: te.repsMax ?? null, restSec: te.restSec ?? null },
       sets: prefillSets(te.sets, { reps: te.reps, load: te.load }, lastSetsFor(sessions, te.exerciseId)),
     })),
   };
@@ -171,3 +172,35 @@ export function moveItem(list, from, to) {
 
 export const slugify = (name) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'exercise';
+
+/** After editing set `si`, copy `field` to every later set that isn't completed yet. */
+export function propagate(block, si, field, value) {
+  return {
+    ...block,
+    sets: block.sets.map((s, i) => (i > si && !s.completed ? { ...s, [field]: value } : s)),
+  };
+}
+
+/** Remove a whole exercise from this session only. */
+export function removeBlock(session, bi) {
+  return { ...session, exercises: session.exercises.filter((_, i) => i !== bi) };
+}
+
+/** 'Last: 3×12 · 17.5 kg' style text; '12×17.5 · 10×20 kg' when sets differ. null if no history. */
+export function formatLast(sets, isBodyweight = false) {
+  if (!sets?.length) return null;
+  const same = sets.every((s) => s.reps === sets[0].reps && s.load === sets[0].load);
+  const kg = (l) => (isBodyweight && !l ? 'BW' : `${formatLoad(l)} kg`);
+  if (same) return `${sets.length}×${sets[0].reps} · ${kg(sets[0].load)}`;
+  const sameLoad = sets.every((s) => s.load === sets[0].load);
+  if (sameLoad) return `${sets.map((s) => s.reps).join('/')} · ${kg(sets[0].load)}`;
+  return sets.map((s) => `${s.reps}×${isBodyweight && !s.load ? 'BW' : formatLoad(s.load)}`).join(' · ') + (sets.some((s) => s.load) ? ' kg' : '');
+}
+
+/** '3 × 8–10 · 2 min' from a block target; null if none. */
+export function formatTarget(target) {
+  if (!target) return null;
+  const reps = target.repsMax && target.repsMax !== target.reps ? `${target.reps}–${target.repsMax}` : `${target.reps}`;
+  const rest = target.restSec ? (target.restSec % 60 === 0 ? `${target.restSec / 60} min` : `${target.restSec} s`) : null;
+  return [`${target.sets} × ${reps}`, rest].filter(Boolean).join(' · ');
+}

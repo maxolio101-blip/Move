@@ -231,25 +231,30 @@
 .card__head .card__title { margin-bottom: 0; }
 .card__meta { font-size: var(--fs-caption); font-weight: 600; color: var(--text-2); }
 
-/* ---------- Steps ------------------------------------------------------- */
+/* ---------- Scores (consistency, weight goal) ------------------------- */
 
-.steps { display: grid; grid-template-columns: 128px 1fr; gap: var(--s-4); align-items: center; }
-.ring { position: relative; width: 128px; height: 128px; border-radius: 50%; }
-.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.ring__track { stroke: var(--steps-soft); }
-.ring__bar { stroke: var(--steps); }
-.ring__center {
-  position: absolute; inset: 0;
-  display: grid; place-items: center; align-content: center;
-  font-size: var(--fs-title3); font-weight: 800; color: var(--steps);
+.scores { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); }
+.score {
+  display: grid; justify-items: center; gap: var(--s-2);
+  padding: var(--s-2) var(--s-1);
+  border-radius: var(--r-md);
+  text-align: center;
 }
-.ring__center small { display: block; font-size: 11px; font-weight: 600; color: var(--text-2); text-align: center; }
-.ring:active { transform: scale(0.97); transition: transform var(--dur-fast) var(--ease-out); }
+.score--btn:active { background: var(--fill); transform: scale(0.98); transition: transform var(--dur-fast) var(--ease-out); }
+.score__ring { width: 88px; height: 88px; }
+.score__ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.score__text { display: grid; gap: 2px; }
+.score__label { font-size: var(--fs-caption); font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.score__value { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+.score__sub { font-size: 14px; color: var(--text-2); }
 
-.steps__value { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-.steps__sub { margin-top: var(--s-1); font-size: var(--fs-callout); color: var(--text-2); }
-.steps__sub b { color: var(--steps); font-weight: 650; }
-.steps__actions { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); margin-top: var(--s-4); }
+.weight-line {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  margin-top: var(--s-3); padding-top: var(--s-3);
+  border-top: 0.5px solid var(--hairline);
+}
+.weight-line__text { font-size: var(--fs-callout); color: var(--text-2); font-weight: 600; }
+.btn--tint-goal { background: var(--steps-soft); color: var(--steps); padding: 0 var(--s-4); flex: none; }
 
 .pop { animation: pop var(--dur) var(--ease-spring); }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
@@ -278,7 +283,6 @@
 .dot--strength { background: var(--strength); }
 .dot--climb { background: var(--climb); }
 .dot--swim { background: var(--swim); }
-.dot--steps { background: var(--steps); }
 .day__habits { width: 26px; height: 4px; border-radius: 2px; background: var(--habits-soft); overflow: hidden; }
 .day__habits span { display: block; height: 100%; width: 100%; background: var(--habits); transform-origin: left; }
 
@@ -487,7 +491,10 @@
 .set-done[aria-pressed="true"] .set-done__check { opacity: 1; transform: scale(1); }
 .set-row.is-done .stepper { opacity: 0.55; }
 
-.block__foot { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin-top: var(--s-2); }
+.block__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--s-2); margin-top: var(--s-2); }
+.block__foot .ghost-btn--danger { grid-column: 1 / -1; }
+.ghost-btn--danger { color: var(--danger); }
+.block__last { font-size: 13px; font-weight: 650; color: var(--text); margin-top: 4px; }
 .ghost-btn { min-height: var(--tap); border-radius: var(--r-sm); font-weight: 600; font-size: 15px; color: var(--text-2); }
 .ghost-btn:active { background: var(--fill); }
 .ghost-btn:disabled { opacity: 0.35; }
@@ -536,3 +543,74 @@
 
 /* Resume state of the Today button */
 .btn--resume { background: var(--strength-soft); color: var(--strength); box-shadow: inset 0 0 0 1.5px var(--strength); }
+
+/* =========================================================================
+   Week card → month
+   ========================================================================= */
+
+.week-btn { display: block; width: 100%; text-align: left; border-radius: var(--r-md); }
+.week-btn:active .week { opacity: 0.7; }
+.card__chev { color: var(--focus); }
+
+.month__head { display: grid; grid-template-columns: var(--tap) 1fr var(--tap); align-items: center; }
+.month__title { text-align: center; font-size: var(--fs-title3); font-weight: 750; }
+.month__dow, .month__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month__dow span { text-align: center; font-size: 12px; font-weight: 700; color: var(--text-3); }
+.mday {
+  display: grid; justify-items: center; align-content: start; gap: 4px;
+  min-height: 60px; padding: 6px 0;
+  border-radius: var(--r-sm);
+  background: var(--card);
+}
+.mday:active { background: var(--fill-strong); }
+.mday--out { background: transparent; opacity: 0.45; }
+.mday--today { box-shadow: inset 0 0 0 1.5px var(--text); }
+.mday--future { background: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
+.mday--future .mday__num { color: var(--text-2); }
+.mday__num { font-size: 15px; font-weight: 700; }
+.mday__dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 7px; max-width: 30px; }
+.mday__habits { width: 24px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); font-size: 13px; color: var(--text-2); padding: 0 var(--s-1); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend__bar { display: inline-block; width: 18px; height: 4px; border-radius: 2px; background: var(--habits); }
+
+/* ---------- Forms --------------------------------------------------------- */
+
+.inline-form { display: grid; grid-template-columns: 1fr auto; gap: var(--s-2); }
+.inline-form .btn { min-height: var(--tap-lg); }
+.input--inline { width: 110px; min-height: var(--tap); text-align: right; background: var(--fill); font-weight: 700; }
+.select { background-image: none; font-weight: 700; }
+.stepper--wide { height: var(--tap-lg); grid-template-columns: var(--tap-lg) 1fr var(--tap-lg); background: var(--card); }
+.stepper--wide .stepper__value { display: grid; place-items: center; }
+
+/* =========================================================================
+   Plan
+   ========================================================================= */
+
+/* Planned, not yet done: hollow ring in the activity colour */
+.dot.dot--plan { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.dot--plan.dot--strength { color: var(--strength); }
+.dot--plan.dot--climb { color: var(--climb); }
+.dot--plan.dot--swim { color: var(--swim); }
+.dot--plan.dot--missed { opacity: 0.4; }
+
+.plan-card { display: grid; gap: var(--s-2); }
+.plan-card .card__head { margin-bottom: 0; }
+.plan-card__title { font-size: var(--fs-title1); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+.plan-card__sub { font-size: var(--fs-callout); color: var(--text-2); }
+.plan-card__hint {
+  font-size: 14px; color: var(--text-2); line-height: 1.35;
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); background: var(--fill);
+}
+.plan-card .btn--lg { margin-top: var(--s-1); min-height: 60px; }
+
+.badge {
+  display: inline-block; vertical-align: 2px; margin-left: var(--s-2);
+  padding: 1px 8px; border-radius: var(--r-pill);
+  background: var(--strength-soft); color: var(--strength);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+}
+.actions__wide { grid-column: 1 / -1; }
+.block__target { font-size: 13px; font-weight: 650; color: var(--strength); margin-top: 4px; }
+.block__last { margin-top: 1px; }

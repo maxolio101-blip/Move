@@ -21,28 +21,17 @@ export async function setHabit(date, key, value) {
   return rec;
 }
 
-// ---- Steps --------------------------------------------------------------
-
-export const getSteps = (date) => get('steps', date);
-
-export async function saveSteps(date, steps, source) {
-  const rec = { date, steps, source, updatedAt: Date.now() };
-  await put('steps', rec);
-  return rec;
-}
-
 // ---- Week ---------------------------------------------------------------
 
-export async function loadWeek(dates) {
-  const [from, to] = [dates[0], dates[6]];
-  const [strength, climbs, swims, steps, habits] = await Promise.all([
+/** Everything dated within [from, to] (ISO, inclusive). */
+export async function loadRange(from, to) {
+  const [strength, climbs, swims, habits] = await Promise.all([
     getByDateRange('strength', from, to),
     getByDateRange('climbs', from, to),
     getByDateRange('swims', from, to),
-    getKeyRange('steps', from, to),
     getKeyRange('habits', from, to),
   ]);
-  return { strength, climbs, swims, steps, habits };
+  return { strength, climbs, swims, habits };
 }
 
 // ---- Exercises & templates ---------------------------------------------
@@ -82,4 +71,52 @@ export async function getActiveSessionId() { return ((await getKV('meta')) || {}
 export async function setActiveSessionId(id) {
   const meta = (await getKV('meta')) || {};
   await setKV('meta', { ...meta, activeWorkoutId: id });
+}
+
+export const loadWeek = (dates) => loadRange(dates[0], dates[dates.length - 1]);
+
+/** Everything needed for the consistency score (all time). */
+export async function loadActivity() {
+  const [strength, climbs, swims] = await Promise.all([getAll('strength'), getAll('climbs'), getAll('swims')]);
+  return { strength, climbs, swims };
+}
+
+// ---- Body weight --------------------------------------------------------
+
+export const getWeights = () => getAll('weights');
+export const getWeight = (date) => get('weights', date);
+export const saveWeight = (date, kg) => put('weights', { date, kg, updatedAt: Date.now() });
+export const deleteWeight = (date) => del('weights', date);
+
+// ---- Climbing & swim ----------------------------------------------------
+
+export const saveClimb = (c) => put('climbs', c);
+export const saveSwim = (s) => put('swims', s);
+export async function lastOf(store) {
+  const all = await getAll(store);
+  return all.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt || 0) - (a.createdAt || 0)))[0] || null;
+}
+export async function sessionsOn(date) {
+  const [strength, climbs, swims] = await Promise.all([
+    getByDateRange('strength', date, date), getByDateRange('climbs', date, date), getByDateRange('swims', date, date),
+  ]);
+  return { strength: strength.filter((s) => s.endedAt), climbs, swims };
+}
+
+// ---- Settings -----------------------------------------------------------
+
+export async function updateSettings(patch) {
+  const next = { ...withDefaults(await getKV('settings')), ...patch };
+  await setKV('settings', next);
+  return next;
+}
+
+// ---- Plan ---------------------------------------------------------------
+
+export const getPlanRange = (from, to) => getKeyRange('plan', from, to);
+export const getAllPlan = () => getAll('plan');
+export const getPlanDay = (date) => get('plan', date);
+export async function setPlanDay(date, items) {
+  const cur = (await get('plan', date)) || { date };
+  await put('plan', { ...cur, date, items, editedAt: Date.now() });
 }
